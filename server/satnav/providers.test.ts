@@ -61,6 +61,34 @@ describe("SATNAV provider normalization", () => {
     expect(event?.startTime).toBe(Date.parse("2026-09-21T01:00:00Z"));
   });
 
+  it("keeps GDACS event and episode IDs separate from the upstream source record ID", () => {
+    const event = normalizeGDACSFeature({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [94.6022, 24.7203] },
+      properties: {
+        eventtype: "EQ",
+        eventid: 1570931,
+        episodeid: 1739368,
+        name: "Earthquake in Myanmar",
+        country: "Myanmar",
+        source: "NEIC",
+        sourceid: "us6000u1nr",
+        fromdate: "2026-10-12T01:28:20",
+        todate: "2026-10-12T01:28:20",
+        datemodified: "2026-10-12T02:08:26",
+        alertlevel: "Green",
+        url: { report: "https://www.gdacs.org/report.aspx?eventid=1570931&episodeid=1739368&eventtype=EQ" },
+        severitydata: { severity: 4.8, severitytext: "Magnitude 4.8M, Depth:78.183km", severityunit: "M" },
+      },
+    }, 1792300000000);
+
+    expect(event?.id).toBe("gdacs:1570931:1739368");
+    expect(event?.providerId).toBe("1570931");
+    expect(event?.sources[0]?.metadata).toMatchObject({ eventType: "EQ", episodeId: "1739368", providerSource: "NEIC", providerSourceId: "us6000u1nr" });
+    expect(event?.sources[0]?.url).toBe("https://www.gdacs.org/report.aspx?eventid=1570931&episodeid=1739368&eventtype=EQ");
+    expect(event?.startTime).toBe(Date.parse("2026-10-12T01:28:20Z"));
+  });
+
   it("rejects invalid event coordinates rather than plotting them", () => {
     expect(normalizeUSGSFeature({
       id: "bad-coordinate",

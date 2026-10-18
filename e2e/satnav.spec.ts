@@ -33,7 +33,7 @@ const eventFixture = {
       label: "GDACS synthetic fixture alert",
       publisher: "Playwright test fixture",
       attribution: "Synthetic browser-test data; not a source report.",
-      metadata: { eventType: "EQ", episodeId: "1738684", alertLevel: "Orange", severityText: "Magnitude 7.7M", providerSource: "Fixture" },
+      metadata: { eventType: "EQ", episodeId: "1738684", alertLevel: "Orange", severityText: "Magnitude 7.7M", providerSource: "NEIC", providerSourceId: "fixture-usgs-event" },
     },
   ],
   sourceCount: 2,
@@ -124,6 +124,10 @@ test("map renders, selects a synthetic matched USGS/GDACS event, pans and zooms 
   await expect(page.getByText("Multiple feed records · not independent corroboration")).toBeVisible();
   await expect(page.getByText("USGS tsunami flag: Yes")).toBeVisible();
   await expect(page.getByText("GDACS event type: EQ")).toBeVisible();
+  await expect(page.getByText("GDACS event ID: 1570339")).toBeVisible();
+  await expect(page.getByText("GDACS episode ID: 1738684")).toBeVisible();
+  await expect(page.getByText("GDACS upstream source: NEIC")).toBeVisible();
+  await expect(page.getByText("GDACS upstream source ID: fixture-usgs-event")).toBeVisible();
 
   await page.getByRole("button", { name: "Close event details" }).click();
   const previousLongitude = new URL(page.url()).searchParams.get("lon");
@@ -173,6 +177,7 @@ test("category filters update visible records and saved events can be removed lo
   await page.getByRole("button", { name: "Map layers and events" }).click();
   const earthquakeRow = page.locator(".layer-row").filter({ hasText: "Earthquakes" });
   await expect(earthquakeRow.getByRole("checkbox")).toBeChecked();
+  await expect(page.locator(".recent-row").filter({ hasText: eventFixture.title }).locator(".recent-source")).toHaveText("USGS · GDACS (NEIC)");
   await earthquakeRow.getByRole("checkbox").uncheck();
   await expect(page.getByText("0 records", { exact: true })).toBeVisible();
   await earthquakeRow.getByRole("checkbox").check();

@@ -65,10 +65,12 @@ function metadataRows(source: SatnavSourceRef): Array<[string, string]> {
     add("USGS event type", metadata.eventType);
   } else if (source.provider === "gdacs") {
     add("GDACS event type", metadata.eventType);
-    add("Episode ID", metadata.episodeId);
+    add("GDACS event ID", source.providerId);
+    add("GDACS episode ID", metadata.episodeId);
     add("Alert level", metadata.alertLevel);
     add("Reported severity", metadata.severityText);
-    add("GDACS provider", metadata.providerSource);
+    add("GDACS upstream source", metadata.providerSource);
+    add("GDACS upstream source ID", metadata.providerSourceId);
   }
   if (source.updatedAt) rows.push(["Feed updated", formatTime(source.updatedAt)]);
   return rows;

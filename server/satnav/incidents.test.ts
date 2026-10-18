@@ -58,6 +58,26 @@ describe("cross-provider incident reconciliation", () => {
     expect(result.incidents[0]?.verification).toBe("official-feed");
   });
 
+  it("links the Yairipok USGS event to its NEIC-backed GDACS episode and retains upstream IDs", () => {
+    const exactTime = Date.parse("2026-10-12T01:28:20Z");
+    const [usgs, gdacs] = matchPair({
+      usgs: { id: "usgs:us6000u1nr", providerId: "us6000u1nr", longitude: 94.6022, latitude: 24.7203, startTime: exactTime, magnitude: 4.8, magnitudeScale: "mb" },
+      gdacs: { id: "gdacs:1570931:1739368", providerId: "1570931", longitude: 94.6022, latitude: 24.7203, startTime: exactTime, magnitude: 4.8, magnitudeScale: "M" },
+    });
+    const linkedGDACS = {
+      ...gdacs!,
+      sources: [{ ...gdacs!.sources[0]!, url: "https://www.gdacs.org/report.aspx?eventid=1570931&episodeid=1739368&eventtype=EQ", metadata: { eventType: "EQ", episodeId: "1739368", providerSource: "NEIC", providerSourceId: "us6000u1nr" } }],
+    };
+
+    const result = reconcileCrossProviderIncidents([usgs!, linkedGDACS]);
+    const gdacsSource = result.incidents[0]?.sources.find(source => source.provider === "gdacs");
+
+    expect(result.incidents).toHaveLength(1);
+    expect(result.incidents[0]?.incidentMembers?.map(member => member.provider).sort()).toEqual(["gdacs", "usgs"]);
+    expect(gdacsSource?.providerId).toBe("1570931");
+    expect(gdacsSource?.metadata).toMatchObject({ episodeId: "1739368", providerSource: "NEIC", providerSourceId: "us6000u1nr" });
+  });
+
   it.each([
     ["distant point", { gdacs: { longitude: -80.4 } }],
     ["late separate event", { gdacs: { startTime: t0 + 16 * 60_000 } }],

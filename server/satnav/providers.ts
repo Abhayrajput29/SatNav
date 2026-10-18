@@ -158,6 +158,7 @@ export function normalizeGDACSFeature(feature: GeoJsonFeature, fetchedAt = Date.
   const eventType = str(properties.eventtype) ?? str(properties["event type"]);
   const episodeId = idStr(properties.episodeid);
   const alertLevel = str(properties.alertlevel);
+  const upstreamSourceId = idStr(properties.sourceid);
   const severityData = object(properties.severitydata);
   const metadata: Record<string, string | number | boolean> = {
     ...(eventType ? { eventType } : {}),
@@ -166,6 +167,7 @@ export function normalizeGDACSFeature(feature: GeoJsonFeature, fetchedAt = Date.
     ...(str(severityData.severitytext) ? { severityText: str(severityData.severitytext)! } : {}),
     ...(str(severityData.severityunit) ? { severityUnit: str(severityData.severityunit)! } : {}),
     ...(str(properties.source) ? { providerSource: str(properties.source)! } : {}),
+    ...(upstreamSourceId ? { providerSourceId: upstreamSourceId } : {}),
   };
   const source = providerSource("gdacs", providerId, sourceUrl, timeMs(properties.datemodified), undefined, metadata);
   const point = pointFromGeometry(geometry);

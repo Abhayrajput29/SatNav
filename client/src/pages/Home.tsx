@@ -47,6 +47,13 @@ function fmtCount(value: number) { return new Intl.NumberFormat(undefined, { max
 function providerLabel(provider: ProviderHealth["provider"]) {
   return provider === "usgs" ? "USGS" : provider === "gdacs" ? "GDACS" : provider === "gdelt" ? "GDELT" : provider.toUpperCase();
 }
+function eventSourceLabel(event: SatnavEvent) {
+  const labels: string[] = [...new Set(event.sources.filter(source => source.provider !== "gdacs").map(source => providerLabel(source.provider)))];
+  const gdacsSources = event.sources.filter(source => source.provider === "gdacs");
+  const gdacsUpstreamSources = [...new Set(gdacsSources.map(source => source.metadata?.providerSource).filter((value): value is string => typeof value === "string" && Boolean(value.trim())))];
+  if (gdacsSources.length) labels.push(`GDACS${gdacsUpstreamSources.length ? ` (${gdacsUpstreamSources.slice(0, 2).join(", ")}${gdacsUpstreamSources.length > 2 ? ", …" : ""})` : ""}`);
+  return labels.join(" · ") || "Source not supplied";
+}
 function sourceStateLabel(state: ProviderHealth["state"]) {
   return state === "available" ? "Checked" : state === "pending" ? "Waiting" : state === "degraded" ? "Cached" : state === "unconfigured" ? "Not configured" : "Unavailable";
 }
@@ -357,7 +364,7 @@ export default function Home() {
                 }).slice(0, 50).map(event => (
                   <button type="button" className="recent-row" key={event.id} onClick={() => selectEvent(event)}>
                     <span className="result-glyph" style={{ "--category-color": CATEGORY_META[event.category].color } as React.CSSProperties}>{CATEGORY_META[event.category].glyph}</span>
-                    <span><strong>{event.title}</strong><small>{event.locationLabel ?? "Location not supplied"}{event.severityLabel ? ` · ${event.severityLabel}` : ""}</small></span>
+                    <span><strong>{event.title}</strong><small>{event.locationLabel ?? "Location not supplied"}{event.severityLabel ? ` · ${event.severityLabel}` : ""}</small><small className="recent-source">{eventSourceLabel(event)}</small></span>
                     <span className="recent-time">{event.startTime !== undefined ? formatUtcDate(event.startTime) : "—"}</span>
                   </button>
                 ))}
